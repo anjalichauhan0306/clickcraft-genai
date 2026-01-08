@@ -37,11 +37,7 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
                 }
                 toast.success(data.message)
             }catch(error:any){
-                 const message =
-                error?.response?.data?.message ||
-                "Something went wrong";
-                
-                setError(message);
+                 throw error
             }
     }
 
@@ -55,11 +51,7 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
                 }
                 toast.success(data.message)
             }catch(error :any){
-                 const message =
-                 error?.response?.data?.message ||
-                "nvalid email or password";
-
-                setError(message);
+                  throw error
             }
     }
 
@@ -70,11 +62,7 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
             setIsLoggedIn(false);
             toast.success(data.message)
         }catch(error:any){
-                 const message =
-                error?.response?.data?.message ||
-                "Something went wrong";
-
-                setError(message);
+                 throw error
             }
     }
 
@@ -86,11 +74,7 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
             setIsLoggedIn(true);
             }
         }catch(error:any){
-                 const message =
-                    error?.response?.data?.message ||
-                    "Something went wrong";
-
-              setError(message);
+                  throw error
             }
     }
 

@@ -20,6 +20,7 @@ const [error, setError] = useState<string | null>(null);
     const handleChange = (e : React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target
         setFormData(prev => ({ ...prev, [name]: value }))
+        setError(null)
     }
 
     const handleSubmit =async (e : React.FormEvent<HTMLFormElement>) => {
@@ -57,7 +58,7 @@ const [error, setError] = useState<string | null>(null);
                 {error && (
                     <p className="text-red-400 text-sm mt-2"> {error}</p>)
                 }
-                
+
                 {state !== "login" && (
                     <div className="flex items-center mt-6 w-full bg-white/5 ring-2 ring-white/10 focus-within:ring-pink-500/60 h-12 rounded-full overflow-hidden pl-6 gap-2 transition-all ">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white/60" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"> <circle cx="12" cy="8" r="5" /> <path d="M20 21a8 8 0 0 0-16 0" /> </svg>
@@ -85,7 +86,10 @@ const [error, setError] = useState<string | null>(null);
                     {state === "login" ? "Login" : "Sign up"}
                 </button>
 
-                <p onClick={() => setState(prev => prev === "login" ? "register" : "login")} className="text-gray-400 text-sm mt-3 mb-11 cursor-pointer" >
+                <p onClick={() => {setState(prev => prev === "login" ? "register" : "login");
+                    setError(null);
+                }
+                } className="text-gray-400 text-sm mt-3 mb-11 cursor-pointer" >
                     {state === "login" ? "Don't have an account?" : "Already have an account?"}
                     <span className="text-pink-400 hover:underline ml-1">click here</span>
                 </p>
