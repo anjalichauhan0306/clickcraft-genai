@@ -25,6 +25,7 @@ const AuthContext = createContext<AuthContextProps>({
 export const AuthProvider = ({children}: {children: React.ReactNode})=>{
     const [user,setUser] = useState<IUser | null>(null)
     const [isLoggedIn,setIsLoggedIn] = useState<boolean>(false)
+     const [error, setError] = useState<string | null>(null);
     
     const signUp = async ({name , email, password}:{name:string;email:string;password:string})=>{
             try{
@@ -35,8 +36,12 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
                     setIsLoggedIn(true)
                 }
                 toast.success(data.message)
-            }catch(error){
-                console.log(error);
+            }catch(error:any){
+                 const message =
+                error?.response?.data?.message ||
+                "Something went wrong";
+                
+                setError(message);
             }
     }
 
@@ -49,8 +54,12 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
                     setIsLoggedIn(true)
                 }
                 toast.success(data.message)
-            }catch(error){
-                console.log(error);
+            }catch(error :any){
+                 const message =
+                 error?.response?.data?.message ||
+                "nvalid email or password";
+
+                setError(message);
             }
     }
 
@@ -60,8 +69,12 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
             setUser(null)
             setIsLoggedIn(false);
             toast.success(data.message)
-        }catch(error){
-                console.log(error);
+        }catch(error:any){
+                 const message =
+                error?.response?.data?.message ||
+                "Something went wrong";
+
+                setError(message);
             }
     }
 
@@ -72,8 +85,12 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
             setUser(data.user as IUser)
             setIsLoggedIn(true);
             }
-        }catch(error){
-                console.log(error);
+        }catch(error:any){
+                 const message =
+                    error?.response?.data?.message ||
+                    "Something went wrong";
+
+              setError(message);
             }
     }
 
@@ -89,7 +106,7 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
         isLoggedIn, setIsLoggedIn,
         login,
         signUp,
-        logOut
+        logOut,error
     }
 
     return (
@@ -100,3 +117,5 @@ export const AuthProvider = ({children}: {children: React.ReactNode})=>{
 }
 
 export const useAuth =()=> useContext(AuthContext);
+
+

@@ -7,8 +7,9 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
     const [state, setState] = useState("login")
     const {user, login,signUp} = useAuth()
-
+    
     const navigate =useNavigate()
+const [error, setError] = useState<string | null>(null);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -21,14 +22,20 @@ const Login = () => {
         setFormData(prev => ({ ...prev, [name]: value }))
     }
 
-    const handleSubmit = (e : React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit =async (e : React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        if(state === 'login'){
-            login(formData)
-        }else{
-            signUp(formData)
+        setError(null)
+        
+        try{    
+            if(state === 'login'){
+           await login(formData)
+            }else{  
+               await signUp(formData)
+            }   
+        }catch(err :any){
+            setError(err?.response?.data?.message || "Inavalid email or password")
         }
-    }
+};
 
     useEffect(()=>{
         if(user){
@@ -47,7 +54,10 @@ const Login = () => {
                 </h1>
 
                 <p className="text-gray-400 text-sm mt-2">Please sign in to continue</p>
-
+                {error && (
+                    <p className="text-red-400 text-sm mt-2"> {error}</p>)
+                }
+                
                 {state !== "login" && (
                     <div className="flex items-center mt-6 w-full bg-white/5 ring-2 ring-white/10 focus-within:ring-pink-500/60 h-12 rounded-full overflow-hidden pl-6 gap-2 transition-all ">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white/60" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"> <circle cx="12" cy="8" r="5" /> <path d="M20 21a8 8 0 0 0-16 0" /> </svg>
