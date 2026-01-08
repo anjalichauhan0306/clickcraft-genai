@@ -1,9 +1,12 @@
 import { Request , Response } from "express"
 import Thumbnail from "../models/Thumbnail.js";
 import { GenerateContentConfig, HarmBlockThreshold, HarmCategory } from "@google/genai";
-import ai from "../configs/ai.js";
-import { error } from "node:console";
 import path from "node:path";
+import fs from 'fs';
+import {v2 as cloudinary} from 'cloudinary'
+import { InferenceClient } from "@huggingface/inference";
+import ai from "../configs/ai.js";
+
 
 const stylePrompt={'Bold & Graphic': 'eye-catching thumbnail,bold typography , vibrant colors , ecpressive facial reaction , dramatic lighting , high contrast , click-worthy composition , proffessional style',
 'Tech/Futuristi':'futuristic thumbnail, sleek modern design , digital ui elements , glowing accents , holographics effects, cyber-tech aesthetic , sharp lighting , high-tech atsmophiere',
@@ -20,7 +23,7 @@ const colorSchemeDescriptions = {
     vibrant  : 'vibrant and eneretic colors . high saturation , bold contrasts , eye-catching palette',
 
     sunset : 'warm sunset tones , orange pink and purple hues , soft gradients , cinematic glow',
-
+                                         
     forest : 'natural green tones , earthy colors , cal and organic palette , gresh atmosphere',
 
     noen :'neon glow errects , electric blues and pinks m cyberpunk lighting , high contast glow ',
@@ -34,14 +37,17 @@ const colorSchemeDescriptions = {
     pastel:'soft pastel colors , low saturation , gentle tones calrm and friendly aesthitic'
 }
  
-export const generateThumbnail = async(req : Request)=>{
+const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY)
+
+
+export const generateThumbnail = async(req : Request, res : Response)=>{
         try{
 
             const {userId} = req.session;
             const {
                 title, prompt :user_prompt, style , aspect_ratio, color_scheme, text_overlay} =  req.body;
                 
-                const thumbnail = await new Thumbnail({
+                const thumbnail = await Thumbnail.create({
                     userId, title, prompt_used: user_prompt,
                     user_prompt,
                     style,
@@ -64,8 +70,8 @@ export const generateThumbnail = async(req : Request)=>{
                     safetySettings:[
                         {category:HarmCategory.HARM_CATEGORY_HATE_SPEECH,threshold:HarmBlockThreshold.OFF},
                         {category:HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,threshold:HarmBlockThreshold.OFF},
-                        { category:HarmCategory.HARM_CATEGORY_IMAGE_SEXUALLY_EXPLICIT,threshold:HarmBlockThreshold.OFF},
-                        {category:HarmCategory.HARM_CATEGORY_IMAGE_HARASSMENT,threshold:HarmBlockThreshold.OFF}
+                        { category:HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,threshold:HarmBlockThreshold.OFF},
+                        {category:HarmCategory.HARM_CATEGORY_HARASSMENT,threshold:HarmBlockThreshold.OFF}
                     ]
                 }
 
@@ -90,23 +96,64 @@ export const generateThumbnail = async(req : Request)=>{
                 if(!response?.candidates?.[0]?.content?.parts){
                     throw new Error('unexepected response')
                 }
-
                 const parts = response.candidates[0].content.parts;
 
                 let finalBuffer : Buffer | null = null;
 
                 for(const part of parts){
-                    if(part.inlineDate){
-                        finalBuffer = Buffer.from(part.inlineDate.data,'base64')
+                    if(part.inlineData){
+                        finalBuffer = Buffer.from(part.inlineData.data,'base64')
                     }
                 }
 
-                const filename = `final-output-${Date.now()}.png`;
+         
 
-                const filepath = path.join('images',filename);
+                const filename = `final-output-${Date.now()}.png`;
+                const filepath = path.join('image',filename);
+                
+                // create the images directory if not exixts 
+
+                fs.mkdirSync('image',{recursive:true})
+                fs.writeFileSync(filepath,finalBuffer!);
+
+                if (!finalBuffer) {
+  throw new Error("Image generation failed");
+}
+
+
+                const uploadResult = await  cloudinary.uploader.upload(filepath,{resource_type : 'image',
+                    folder: "ai-thumbnails",}
+                )
+
+                thumbnail.image_url = uploadResult.secure_url;
+                thumbnail.isGenerating = false;
+
+                await thumbnail.save()
+
+                res.json({message : 'thumbnail generated' , thumbnail })
+
+                // remove the file from disk 
+
+                fs.unlinkSync(filepath)
 
             }
-            catch(error){
-
+            catch(error :any){
+                console.log(error);
+                res.status(500).json({message :error.message})
             }
         }
+
+export const deleteThumbnail = async (req:Request ,res:Response)=>{
+    try{
+        const {id} = req.params;
+        const {userId} = req.session;
+
+        await Thumbnail.findByIdAndDelete({_id:id,userId})
+
+        res.json({message:"Thumbnail deleted successfully"});
+
+    }catch(error : any){
+        console.log(error)
+        res.status(500).json(error.message);
+    }
+}
