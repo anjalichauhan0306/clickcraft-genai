@@ -25,19 +25,18 @@ export const registerUser = async(req:Request, res:Response) =>{
                 name , email , password : hashedPassword
             })
 
-            await newUser.save();
-console.log("SAVED USER:", newUser);
+//             await newUser.save();
+// console.log("SAVED USER:", newUser);
             // Setting User Data in Session
 
             req.session.isLoggedIn = true;
             req.session.userId = newUser._id;
 
-            return  res.json({message:"User regi okk successfully", 
+            return  res.json({message:"User registration successfully", 
                 user:{
                 id:newUser._id,
                 name:newUser.name,
                 email:newUser.email,
-                password:newUser.password
             }});
     }
  catch (error : any) {
@@ -60,7 +59,7 @@ export const loginUser = async(req:Request, res:Response) =>{
 
         const isPasswordCorrect = await bcrypt.compare(password , user.password)
         if(!isPasswordCorrect){
-            return res.status(400).json({message:"Invalid Email Or Password !"});
+            return res.status(400).json({message:"Invalid Password !"});
         }
 
 

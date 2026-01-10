@@ -56,7 +56,7 @@ const [error, setError] = useState<string | null>(null);
 
                 <p className="text-gray-400 text-sm mt-2">Please sign in to continue</p>
                 {error && (
-                    <p className="text-red-400 text-sm mt-2"> {error}</p>)
+                    <p className="text-pink-400 hover:underline ml-1"> {error}</p>)
                 }
 
                 {state !== "login" && (
